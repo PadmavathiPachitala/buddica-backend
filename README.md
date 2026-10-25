@@ -22,9 +22,8 @@ A robust, production-grade RESTful API engineered for digital wallet management,
 12. [Installation & Local Setup](#installation--local-setup)
 13. [Testing](#testing)
 14. [Postman API Testing](#postman-api-testing)
-15. [Known Limitations & Future Improvements](#known-limitations--future-improvements)
-16. [Assignment Deliverables](#assignment-deliverables)
-17. [License & Author](#license--author)
+15. [Assignment Deliverables](#assignment-deliverables)
+16. [License & Author](#license--author)
 
 ---
 
@@ -244,21 +243,15 @@ fintech-assesment/
 │       ├── admin.service.test.js       # Unit tests for admin safeguards and state-machine transitions
 │       ├── admin.validators.test.js    # Unit tests for role and status change payload validators
 │       ├── app.test.js                 # Unit tests for health check, Helmet headers & CORS
-│       ├── appError.test.js            # Unit tests for custom AppError class properties
-│       ├── auth.controller.test.js     # Unit tests for auth controller response serialization
-│       ├── auth.middleware.test.js     # Unit tests for JWT extraction, expiry & user loading
-│       ├── auth.service.test.js        # Unit tests for auth service registration & login logic
 │       ├── auth.validators.test.js     # Unit tests for registration & login validators (byte length checks)
 │       ├── authorize.middleware.test.js# Unit tests for RBAC role enforcement & fail-closed behavior
-│       ├── dbIsolation.test.js         # Unit tests for testDbGuard URI parsing and collision detection
-│       ├── errorHandler.test.js        # Unit tests for centralized error response formatting
+│       ├── dbGuard.test.js             # Unit tests for testDbGuard URI parsing and collision detection
 │       ├── user.model.test.js          # Unit tests for User password comparison & JSON serialization
-│       ├── wallet.controller.test.js   # Unit tests for wallet controller input parsing
 │       └── wallet.service.test.js      # Unit tests for transfer idempotency & standalone fallback
 ├── .env.example                        # Template environment configuration file with safe placeholders
 ├── fintech_api.postman_collection.json # Exportable Postman / Thunder Client collection with variables
 ├── package.json                        # Node.js project manifest, dependencies & scripts
-├── PROJECT_HANDOVER_REPORT.md          # Architectural handover notes & security decisions
+├── README.md                           # System documentation, design decisions & runbook
 └── server.js                           # HTTP server bootstrap & graceful shutdown handler
 ```
 
@@ -1112,24 +1105,6 @@ Follow this sequence to test all roles, permissions, and financial edge cases:
    - Update user role: `PATCH /api/admin/users/:userId/role` with `role: "support"` and a mandatory reason (`200 OK`).
    - Reversal test: Call `PATCH /api/admin/transactions/:transactionId/status` with `status: "reversed"`. Recipient is debited, sender is refunded, and the action is logged to `AuditLog`.
    - Inspect audit trail: `GET /api/admin/audit-logs` (`200 OK`).
-
----
-
-## Known Limitations & Future Improvements
-
-### Confirmed Limitations
-
-1. **MongoDB Replica Set Dependency for Full Atomicity:** Multi-document ACID transactions require a replica set (`rs0`). While the service includes a standalone fallback with atomic conditional queries (`{ balance: { $gte: amount } }`) and compensating rollbacks, standalone mode cannot guarantee multi-document atomicity if the Node.js process crashes between debit and credit operations.
-2. **In-Memory Rate Limiting:** The `express-rate-limit` middleware uses in-memory storage. In a horizontally scaled multi-server deployment, rate limits would not be shared across instances.
-3. **Reversal Ledger Concurrency:** In `admin.service.js`, the transaction status update and the reversal ledger balance movement execute sequentially. Under extreme concurrent administrative reversal requests on the same transaction, a compare-and-swap status check is recommended.
-4. **Single Currency Ledger:** Balances and transfers are fixed to Indian Rupee (`INR` in paise). Multi-currency transactions and real-time exchange rates are not supported.
-
-### Potential Future Improvements
-
-- **Redis Integration:** Implement Redis-backed distributed rate limiting and token revocation blacklists.
-- **Webhook System:** Add webhook event notifications for asynchronous transfer confirmation (`transfer.succeeded`, `transfer.reversed`).
-- **Ledger Export:** Support CSV and PDF account statement exports for customer transaction history.
-- **Two-Factor Authentication (2FA):** Integrate TOTP-based multi-factor authentication for administrative operations.
 
 ---
 
