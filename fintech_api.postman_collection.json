@@ -1,0 +1,602 @@
+{
+	"info": {
+		"_postman_id": "8f3b0e2a-7d4c-4a1e-8e5b-3b6e8f1a2c3d",
+		"name": "Fintech Wallet & RBAC API",
+		"description": "Production-grade RESTful API collection for Fintech Wallet management, Role-Based Access Control (RBAC), atomic peer-to-peer transfers, and administrative auditing.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "customerToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "adminToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "supportToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "sampleReceiverId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "sampleTransactionId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Register Customer (Alice)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.token) {",
+									"    pm.collectionVariables.set(\"customerToken\", jsonData.data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Alice Customer\",\n    \"email\": \"alice@example.com\",\n    \"password\": \"SecurePass123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "Register a new customer account. The role is strictly customer; wallet is auto-initialized with 0 paise."
+					}
+				},
+				{
+					"name": "Register Second Customer (Bob)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 or 409\", function () {",
+									"    pm.expect([201, 409]).to.include(pm.response.code);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.user) {",
+									"    pm.collectionVariables.set(\"sampleReceiverId\", jsonData.data.user.id || jsonData.data.user._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Bob Customer\",\n    \"email\": \"bob@example.com\",\n    \"password\": \"SecurePass123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "Register Bob as second customer to act as recipient in peer transfers."
+					}
+				},
+				{
+					"name": "Login Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"pm.collectionVariables.set(\"customerToken\", jsonData.data.token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"alice@example.com\",\n    \"password\": \"SecurePass123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Authenticates customer and returns JWT Bearer token."
+					}
+				},
+				{
+					"name": "Login Admin (Seeded)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"pm.collectionVariables.set(\"adminToken\", jsonData.data.token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"AdminSecure123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Log in with default seeded admin credentials."
+					}
+				},
+				{
+					"name": "Login Support (Seeded)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"pm.collectionVariables.set(\"supportToken\", jsonData.data.token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"support@example.com\",\n    \"password\": \"SupportSecure123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Log in with default seeded support credentials."
+					}
+				},
+				{
+					"name": "Get Current Profile (Me)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "me"]
+						},
+						"description": "Retrieves the currently authenticated user profile."
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Customer Wallet & Transfers",
+			"item": [
+				{
+					"name": "Get Customer Wallet Balance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Balance is numeric integer paise\", function () {",
+									"    pm.expect(typeof jsonData.data.wallet.balance).to.eql(\"number\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/wallet",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "wallet"]
+						},
+						"description": "Fetch customer's own wallet balance in integer paise (1 INR = 100 paise)."
+					}
+				},
+				{
+					"name": "Transfer Funds (Paise)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 or 400\", function () {",
+									"    pm.expect([200, 201, 400]).to.include(pm.response.code);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.transaction) {",
+									"    var txId = jsonData.data.transaction.transactionId || jsonData.data.transaction._id;",
+									"    pm.collectionVariables.set(\"sampleTransactionId\", txId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "idem-demo-tx-001"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"receiverId\": \"{{sampleReceiverId}}\",\n    \"amount\": 5000,\n    \"description\": \"Coffee bill split\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/wallet/transfer",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "wallet", "transfer"]
+						},
+						"description": "Transfer funds (5000 paise = 50 INR) atomically with idempotency protection."
+					}
+				},
+				{
+					"name": "Get Own Transactions History",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/wallet/transactions?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "wallet", "transactions"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Lists customer transaction history with direction ('debit'/'credit') and pagination."
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Administrative & Support Operations",
+			"item": [
+				{
+					"name": "Admin - List All Users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/users?page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "users"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Admin only: Retrieve paginated user directory with filters."
+					}
+				},
+				{
+					"name": "Admin - Update User Role",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 400\", function () {",
+									"    pm.expect([200, 400, 404]).to.include(pm.response.code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role\": \"support\",\n    \"reason\": \"Onboarded as tier-1 customer support representative\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/users/{{sampleReceiverId}}/role",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "users", "{{sampleReceiverId}}", "role"]
+						},
+						"description": "Admin only: Change user role with mandatory reason and AuditLog creation. Protects against self-demotion."
+					}
+				},
+				{
+					"name": "Support & Admin - Search All Transactions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supportToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/transactions?page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "transactions"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Support and Admin: Inspect all system transactions across users with optional filtering."
+					}
+				},
+				{
+					"name": "Admin - Update Transaction Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 400\", function () {",
+									"    pm.expect([200, 400, 404]).to.include(pm.response.code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"reversed\",\n    \"reason\": \"Customer confirmed disputed unauthorized charge\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/transactions/{{sampleTransactionId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "transactions", "{{sampleTransactionId}}", "status"]
+						},
+						"description": "Admin only: Update an eligible transaction status and record action in audit log. Reversing a completed transfer executes an atomic balance refund."
+					}
+				},
+				{
+					"name": "Admin - View Audit Logs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/audit-logs?page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "audit-logs"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Admin only: View immutable audit trail of administrative actions."
+					}
+				}
+			]
+		}
+	]
+}
