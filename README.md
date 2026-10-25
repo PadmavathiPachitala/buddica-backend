@@ -249,6 +249,7 @@ fintech-assesment/
 │       ├── user.model.test.js          # Unit tests for User password comparison & JSON serialization
 │       └── wallet.service.test.js      # Unit tests for transfer idempotency & standalone fallback
 ├── .env.example                        # Template environment configuration file with safe placeholders
+├── AI_Usage_Summary_Sheet.md           # Declaration of AI assistance and manual implementation ownership
 ├── fintech_api.postman_collection.json # Exportable Postman / Thunder Client collection with variables
 ├── package.json                        # Node.js project manifest, dependencies & scripts
 ├── README.md                           # System documentation, design decisions & runbook
@@ -1115,7 +1116,7 @@ This repository contains the required deliverables for the Buddica Global Soluti
 1. **Public GitHub Repository:** Clean git history, organized modular architecture, and isolated configurations.
 2. **Project Documentation (`README.md`):** Complete, technically verified documentation covering architecture, security, database design, setup, and testing.
 3. **Postman Collection (`fintech_api.postman_collection.json`):** Exportable collection with automated tests, variables, and full coverage of authentication, wallet, and administrative modules.
-4. **AI Usage Summary Sheet:** As specified in the assignment guidelines, the AI Usage Summary Sheet is a separate deliverable and will be prepared and submitted via the designated submission process.
+4. **AI Usage Summary Sheet (`AI_Usage_Summary_Sheet.md`):** Complete disclosure of AI tools utilized (documentation, test scaffolding, Postman scripts) and manual implementation ownership.
 
 ---
 
