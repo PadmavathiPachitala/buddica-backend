@@ -948,8 +948,8 @@ The application is configured through environment variables. A template is provi
 
 ### 2. Clone the Repository
 ```bash
-git clone https://github.com/your-username/fintech-assesment.git
-cd fintech-assesment
+git clone https://github.com/PadmavathiPachitala/buddica-backend.git
+cd buddica-backend
 ```
 
 ### 3. Install Dependencies

@@ -92,11 +92,15 @@ class AdminService {
         return user.toJSON();
     }
 
-    async listTransactions({ status, senderId, receiverId, startDate, endDate, page = 1, limit = 10 }) {
+    async listTransactions({ status, senderId, receiverId, userId, startDate, endDate, page = 1, limit = 10 }) {
         const query = {};
 
         if (status) {
             query.status = status;
+        }
+
+        if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+            query.$or = [{ senderId: userId }, { receiverId: userId }];
         }
 
         if (senderId && mongoose.Types.ObjectId.isValid(senderId)) {

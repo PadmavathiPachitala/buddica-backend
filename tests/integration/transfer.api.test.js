@@ -430,4 +430,44 @@ describe("Transfer & Transactions API - Integration Tests", () => {
         const senderWallet = await Wallet.findOne({ userId: senderUser._id });
         assert.equal(senderWallet.balance, 5000);
     });
+
+    it("POST /transfer - should allow multiple transfers from same sender with NO Idempotency-Key", async () => {
+        // First transfer without Idempotency-Key (sender has 5000 paise remaining)
+        const firstRes = await fetch(`${baseUrl}/transfer`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${senderToken}`,
+            },
+            body: JSON.stringify({
+                receiverId: receiverUser._id.toString(),
+                amount: 1000,
+            }),
+        });
+
+        assert.equal(firstRes.status, 201);
+        const firstData = await firstRes.json();
+        assert.equal(firstData.status, "success");
+
+        // Second transfer from SAME sender without Idempotency-Key (partial index prevents duplicate null key collisions)
+        const secondRes = await fetch(`${baseUrl}/transfer`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${senderToken}`,
+            },
+            body: JSON.stringify({
+                receiverId: receiverUser._id.toString(),
+                amount: 1000,
+            }),
+        });
+
+        assert.equal(secondRes.status, 201);
+        const secondData = await secondRes.json();
+        assert.equal(secondData.status, "success");
+        assert.notEqual(firstData.data.transaction._id, secondData.data.transaction._id);
+
+        const senderWallet = await Wallet.findOne({ userId: senderUser._id });
+        assert.equal(senderWallet.balance, 3000); // 5000 - 1000 - 1000
+    });
 });

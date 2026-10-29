@@ -67,7 +67,14 @@ transactionSchema.index({ senderId: 1, createdAt: -1 });
 transactionSchema.index({ receiverId: 1, createdAt: -1 });
 
 // Unique compound index on idempotencyKey scoped to senderId to guarantee uniqueness at the database engine level (K-001)
-transactionSchema.index({ idempotencyKey: 1, senderId: 1 }, { unique: true, sparse: true });
+// Uses partialFilterExpression so that transfers without an idempotency key (keyless) are not indexed, avoiding duplicate null key collisions.
+transactionSchema.index(
+    { idempotencyKey: 1, senderId: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { idempotencyKey: { $type: "string" } },
+    }
+);
 
 transactionSchema.set("toJSON", {
     transform: (doc, ret) => {
