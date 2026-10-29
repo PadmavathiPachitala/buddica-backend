@@ -161,6 +161,17 @@ describe("Admin & Support API - Integration Tests", () => {
 
             assert.equal(res.status, 403);
         });
+
+        it("should safely handle search text with special regex characters without throwing", async () => {
+            const res = await fetch(`${baseUrl}/users?search=${encodeURIComponent("[admin]+?.*$()^")}`, {
+                headers: { Authorization: `Bearer ${adminToken}` },
+            });
+
+            assert.equal(res.status, 200);
+            const data = await res.json();
+            assert.equal(data.status, "success");
+            assert.ok(Array.isArray(data.data.users));
+        });
     });
 
     describe("PATCH /api/admin/users/:userId/role", () => {
